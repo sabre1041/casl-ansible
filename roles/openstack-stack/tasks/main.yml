@@ -1,0 +1,30 @@
+---
+- name: create stack
+  ignore_errors: False
+  register: stack_create
+  os_stack:
+    name: "{{ stack_name }}"
+    state: present
+    template: heat_stack.yaml
+    wait: yes
+    parameters:
+      cluster_env: "dev"
+      cluster_id: "{{ stack_name }}"
+      subnet_24_prefix: 192.168.11
+      dns_nameservers: 10.9.48.31
+      external_net: "nova"
+      ssh_public_key: "{{ ssh_public_key }}"
+      num_etcd: 1
+      num_masters: 1
+      num_nodes: 1
+      num_infra: 1
+      etcd_image: "{{ openstack_image }}"
+      master_image: "{{ openstack_image }}"
+      node_image: "{{ openstack_image }}"
+      infra_image: "{{ openstack_image }}"
+      dns_image: "{{ openstack_image }}"
+      etcd_flavor: "{{ etcd_flavor }}"
+      master_flavor: "{{ master_flavor }}"
+      node_flavor: "{{ node_flavor }}"
+      infra_flavor: "{{ infra_flavor }}"
+      dns_flavor: "{{ dns_flavor }}"
