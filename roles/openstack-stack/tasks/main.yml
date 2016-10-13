@@ -5,14 +5,14 @@
   os_stack:
     name: "{{ stack_name }}"
     state: present
-    template: heat_stack.yaml
+    template: 'roles/openstack-stack/files/heat_stack.yaml'
     wait: yes
     parameters:
       cluster_env: "dev"
       cluster_id: "{{ stack_name }}"
       subnet_24_prefix: 192.168.11
       dns_nameservers: 10.9.48.31
-      external_net: "nova"
+      external_net: "{{ external_network }}"
       ssh_public_key: "{{ ssh_public_key }}"
       num_etcd: 1
       num_masters: 1
@@ -22,7 +22,8 @@
       master_image: "{{ openstack_image }}"
       node_image: "{{ openstack_image }}"
       infra_image: "{{ openstack_image }}"
-      dns_image: "{{ openstack_image }}"
+      dns_image: "rhel-guest-image-7.2"
+#      dns_image: "{{ openstack_image }}"
       etcd_flavor: "{{ etcd_flavor }}"
       master_flavor: "{{ master_flavor }}"
       node_flavor: "{{ node_flavor }}"
