@@ -1,0 +1,76 @@
+[all:vars]
+ansible_ssh_user=openshift
+ansible_become=True
+
+# OpenStack Provisioning Variables
+openstack_ssh_public_key="ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC+A26nd6teDDU6WjR+PlMOK3jbi0kBg2wXh+g5wJ2TDxKIvFiL9vgejbsFmeCYPnkuu3Ib6BGB/1ctLycIHMPRby2vWd43MKDrg0dlUf8e0slb8u0mLUQ4iSpX9JGmGIrJYpgCeroeteeks0SFtmug3UbCITX88Q4OcpZ1KHN5P0Lmn/CNzopHgWue/ijOYvRfapAg7voiOmlGqY50smWX/KDcnwkKULkVZwNnouaq4iKOtJL/MFTUJaiPiFk4IcvZo1aAcdDEhjY1exVT5YowDFN84a+RLee4x9sR1dRV5iYO3Ta+gScds78rsHS8NXrZlkU/tYYgAs7nJABVoKIB esauer@etl-util3.etl.lab.eng.rdu2.redhat.com"
+openstack_default_image_name="rhel-guest-image-7.2"
+openstack_default_flavor="m1.medium"
+openstack_external_network_name="external"
+openstack_dns_domain="casl.rht-labs.com"
+dns_domain="casl.rht-labs.com"
+openstack_nameservers=10.9.48.31
+openstack_subnet_prefix=192.168.99
+public_dns_forwarder=10.9.48.31
+
+# Subscription Management Details
+rhsm_register=True
+rhsm_satellite='sat6-1.etl.lab.eng.rdu2.redhat.com'
+rhsm_org='Emerging_Tech_Lab'
+rhsm_activationkey='rhel-7-ose'
+rhsm_repos='["rhel-7-server-rpms", "rhel-7-server-ose-3.2-rpms", "rhel-7-server-extras-rpms"]'
+rhsm_password=''
+
+
+# Create an OSEv3 group that contains the master, nodes, etcd, and lb groups.
+# The lb group lets Ansible configure HAProxy as the load balancing solution.
+# Comment lb out if your load balancer is pre-configured.
+[OSEv3:children]
+masters
+nodes
+etcd
+
+# Set variables common for all OSEv3 hosts
+[OSEv3:vars]
+
+deployment_type=openshift-enterprise
+openshift_deployment_type=openshift-enterprise
+
+openshift_master_default_subdomain=apps.test-stack.casl.rht-labs.com
+
+# Uncomment the following to enable htpasswd authentication; defaults to
+# DenyAllPasswordIdentityProvider.
+#openshift_master_identity_providers=[{'name': 'htpasswd_auth', 'login': 'true', 'challenge': 'true', 'kind': 'HTPasswdPasswordIdentityProvider', 'filename': '/etc/origin/master/htpasswd'}]
+#openshift_master_identity_providers=[{'bindDN': 'uid=ldap,cn=users,cn=compat,dc=rhc-ose,dc=labs,dc=redhat,dc=com', 'kind': 'LDAPPasswordIdentityProvider', 'name': 'paas_ldap_provider', 'bindPassword': 'ldap123', 'url': 'ldap://ipa.rhc-ose.labs.redhat.com:636/dc=rhc-ose,dc=labs,dc=redhat,dc=com?uid?sub?(memberOf=cn=ose_users,cn=groups,cn=accounts,dc=rhc-ose,dc=labs,dc=redhat,dc=com)', 'challenge': 'true', 'attributes': {'email': ['mail'], 'preferredUsername': ['uid'], 'id': ['dn'], 'name': ['displayName']}, 'login': 'true', 'insecure': 'true'}]
+openshift_master_identity_providers=[{'name':'paas_ldap_provider','login':'true','challenge':'true','kind':'LDAPPasswordIdentityProvider','attributes':{'id':['dn'],'email':['mail'],'name':['displayName'],'preferredUsername':['uid']},'insecure':'true','bindDN':'uid=ldap,cn=users,cn=accounts,dc=etl,dc=lab,dc=eng,dc=rdu2,dc=redhat,dc=com','bindPassword':'ldap123','url':'ldap://idm-1.etl.lab.eng.rdu2.redhat.com:389/dc=etl,dc=lab,dc=eng,dc=rdu2,dc=redhat,dc=com?uid?sub?(memberOf=cn=ose_users,cn=groups,cn=accounts,dc=etl,dc=lab,dc=eng,dc=rdu2,dc=redhat,dc=com)'}]
+
+
+
+openshift_hosted_metrics_deploy=true
+openshift_hosted_metrics_storage_kind=nfs
+openshift_hosted_metrics_storage_access_modes=['ReadWriteOnce']
+openshift_hosted_metrics_storage_nfs_directory=/exports
+openshift_hosted_metrics_storage_nfs_options=*(rw,root_squash)
+openshift_hosted_metrics_storage_volume_name=metrics
+openshift_hosted_metrics_storage_volume_size=20Gi
+
+# override the default controller lease ttl
+#osm_controller_lease_ttl=30
+
+# Host Groups
+[meta-host-type_etcd]
+[meta-host-type_node]
+[meta-host-type_master]
+[meta-host-type_dns]
+
+[masters:children]
+meta-host-type_master
+
+[etcd:children]
+meta-host-type_master
+
+[nodes:children]
+meta-host-type_node
+
+[dns:children]
+meta-host-type_dns

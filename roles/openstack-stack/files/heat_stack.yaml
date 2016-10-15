@@ -68,6 +68,11 @@ parameters:
     label: Number of infrastructure nodes
     description: Number of infrastructure nodes
 
+  num_dns:
+    type: number
+    label: Number of dns servers
+    description: Number of dns servers
+
   etcd_image:
     type: string
     label: Etcd image
@@ -225,10 +230,12 @@ resources:
               params:
                 subnet_24_prefix: { get_param: subnet_24_prefix }
       dns_nameservers:
-        - str_replace:
-            template: subnet_24_prefix.2
-            params:
-              subnet_24_prefix: { get_param: subnet_24_prefix }
+        - 10.9.48.31
+#        - { get_param: dns_nameservers }
+#        repeat:
+#          for_each: 
+#            <%nameserver%>: { get_param: dns_nameservers }
+#          template: <%nameserver%>
 
   router:
     type: OS::Neutron::Router
@@ -475,10 +482,11 @@ resources:
         properties:
           name:
             str_replace:
-              template: cluster_id-k8s_type-%index%
+              template: k8s_type-%index%.cluster_id.cluster_env
               params:
                 cluster_id: { get_param: cluster_id }
                 k8s_type: etcd
+                cluster_env: { get_param: cluster_env }
           cluster_env: { get_param: cluster_env }
           cluster_id:  { get_param: cluster_id }
           type:        etcd
@@ -507,10 +515,11 @@ resources:
         properties:
           name:
             str_replace:
-              template: cluster_id-k8s_type-%index%
+              template: k8s_type-%index%.cluster_id.cluster_env
               params:
                 cluster_id: { get_param: cluster_id }
                 k8s_type: master
+                cluster_env: { get_param: cluster_env }
           cluster_env: { get_param: cluster_env }
           cluster_id:  { get_param: cluster_id }
           type:        master
@@ -540,15 +549,16 @@ resources:
         properties:
           name:
             str_replace:
-              template: cluster_id-k8s_type-sub_host_type-%index%
+              template: subtype-k8s_type-%index%.cluster_id.cluster_env
               params:
                 cluster_id: { get_param: cluster_id }
                 k8s_type: node
-                sub_host_type: compute
+                subtype: app
+                cluster_env: { get_param: cluster_env }
           cluster_env: { get_param: cluster_env }
           cluster_id:  { get_param: cluster_id }
           type:        node
-          subtype:     compute
+          subtype:     app
           image:       { get_param: node_image }
           flavor:      { get_param: node_flavor }
           key_name:    { get_resource: keypair }
@@ -574,11 +584,12 @@ resources:
         properties:
           name:
             str_replace:
-              template: cluster_id-k8s_type-sub_host_type-%index%
+              template: subtypek8s_type-%index%.cluster_id.cluster_env
               params:
                 cluster_id: { get_param: cluster_id }
                 k8s_type: node
-                sub_host_type: infra
+                subtype: infra
+                cluster_env: { get_param: cluster_env }
           cluster_env: { get_param: cluster_env }
           cluster_id:  { get_param: cluster_id }
           type:        node
@@ -601,77 +612,36 @@ resources:
       - interface
 
   dns:
-    type: OS::Nova::Server
+    type: OS::Heat::ResourceGroup
     properties:
-      name:
-        str_replace:
-          template: cluster_id-dns
-          params:
-            cluster_id: { get_param: cluster_id }
-      key_name: { get_resource: keypair }
-      image:    { get_param: dns_image }
-      flavor:   { get_param: dns_flavor }
-      networks:
-        - port: { get_resource: dns-port }
-      user_data: { get_resource: dns-config }
-      user_data_format: RAW
-
-  dns-port:
-    type: OS::Neutron::Port
-    properties:
-      network: { get_resource: net }
-      fixed_ips:
-        - subnet: { get_resource: subnet }
-          ip_address:
+      count: { get_param: num_dns }
+      resource_def:
+        type: heat_stack_server.yaml
+        properties:
+          name:
             str_replace:
-              template: subnet_24_prefix.2
+              template: k8s_type-%index%.cluster_id.cluster_env
               params:
-                subnet_24_prefix: { get_param: subnet_24_prefix }
-      security_groups:
-        - { get_resource: dns-secgrp }
-
-  dns-floating-ip:
-    type: OS::Neutron::FloatingIP
-    properties:
-      floating_network: { get_param: external_net }
-      port_id: { get_resource: dns-port }
-
-  dns-config:
-    type: OS::Heat::MultipartMime
-    properties:
-      parts:
-        - config:
+                cluster_id: { get_param: cluster_id }
+                k8s_type: dns
+                cluster_env: { get_param: cluster_env }
+          cluster_env: { get_param: cluster_env }
+          cluster_id:  { get_param: cluster_id }
+          type:        dns
+          image:       { get_param: dns_image }
+          flavor:      { get_param: dns_flavor }
+          key_name:    { get_resource: keypair }
+          net:         { get_resource: net }
+          subnet:      { get_resource: subnet }
+          secgrp:
+            - { get_resource: node-secgrp }
+            - { get_resource: dns-secgrp }
+          floating_network: { get_param: external_net }
+          net_name:
             str_replace:
-              template: |
-                #cloud-config
-                disable_root: true
-
-                system_info:
-                  default_user:
-                    name: openshift
-                    sudo: ["ALL=(ALL) NOPASSWD: ALL"]
-
-                write_files:
-                  - path: /etc/sudoers.d/00-openshift-no-requiretty
-                    permissions: 440
-                    content: |
-                      Defaults:openshift !requiretty
-                  - path: /etc/sysconfig/network-scripts/ifcfg-eth0
-                    content: |
-                      DEVICE="eth0"
-                      BOOTPROTO="dhcp"
-                      DNS1="$dns1"
-                      DNS2="$dns2"
-                      PEERDNS="no"
-                      ONBOOT="yes"
-                runcmd:
-                  - [ "/usr/bin/systemctl", "restart", "network" ]
+              template: openshift-ansible-cluster_id-net
               params:
-                $dns1:
-                  get_param:
-                    - dns_nameservers
-                    - 0
-                $dns2:
-                  get_param:
-                    - dns_nameservers
-                    - 1
+                cluster_id: { get_param: cluster_id }
+    depends_on:
+      - interface
+

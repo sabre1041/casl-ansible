@@ -1,0 +1,13 @@
+---
+# Provision Openstack Instances
+# TBD
+
+# Pre-Install Steps
+- include pre-install.yaml
+
+# Install
+- include install.yaml
+
+# Post Install
+- include post-install.yaml
+

@@ -1,0 +1,14 @@
+---
+named_config_views:
+  - name: "private"
+    acl_entry:
+{% for host in groups['OSEv3']%}
+    - "{{ hostvars[host]["dns_private_ip"] }}/32"
+{% endfor %}
+    zone:
+    - "dns_domain": "{{ full_dns_domain }}"
+  - name: "public"
+    zone:
+    - "dns_domain": "{{ full_dns_domain }}"
+    forwarder:
+    - "{{ public_dns_forwarder }}"
