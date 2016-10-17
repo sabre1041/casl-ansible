@@ -14,11 +14,11 @@
       dns_nameservers: "{{ dns_nameservers }}"
       external_net: "{{ external_network }}"
       ssh_public_key: "{{ ssh_public_key }}"
-      num_etcd: 1
-      num_masters: 1
-      num_nodes: 1
-      num_infra: 1
-      num_dns: 1
+      num_etcd: "{{ num_etcd }}"
+      num_masters: "{{ num_masters }}"
+      num_nodes: "{{ num_nodes }}"
+      num_infra: "{{ num_infra }}"
+      num_dns: "{{ num_dns }}"
       etcd_image: "{{ openstack_image }}"
       master_image: "{{ openstack_image }}"
       node_image: "{{ openstack_image }}"

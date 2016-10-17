@@ -13,8 +13,8 @@ env_id="test-stack"
 openstack_nameservers=10.9.48.31
 openstack_subnet_prefix=192.168.99
 public_dns_forwarder=10.9.48.31
-openshift_ansible_path="/root/repository/openshift-ansible"
-openshift_ansible_path=/root/repository/openshift-ansible
+openstack_num_nodes=1
+openstack_num_infra=1
 
 # Subscription Management Details
 rhsm_register=True
