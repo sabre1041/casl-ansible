@@ -62,7 +62,12 @@ openshift_master_identity_providers=[{'name':'paas_ldap_provider','login':'true'
 
 # Host Groups
 [meta-host-type_etcd]
-[meta-host-type_node]
+[meta-sub-host-type_app]
+[meta-sub-host-type_app:vars]
+openshift_node_labels="{'region':'infra','zone':'default'}"
+[meta-sub-host-type_infra]
+[meta-sub-host-type_infra:vars]
+openshift_node_labels="{'region':'app','zone':'default'}"
 [meta-host-type_master]
 [meta-host-type_dns]
 
@@ -73,7 +78,8 @@ meta-host-type_master
 meta-host-type_master
 
 [nodes:children]
-meta-host-type_node
+meta-sub-host-type_infra
+meta-sub-host-type_app
 
 [dns:children]
 meta-host-type_dns
