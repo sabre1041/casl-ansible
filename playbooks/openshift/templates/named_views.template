@@ -2,8 +2,8 @@
 named_config_views:
   - name: "private"
     acl_entry:
-{% for host in groups['OSEv3']%}
-    - "{{ hostvars[host]["dns_private_ip"] }}/32"
+{% for host in groups[named_views_hostgroup]%}
+    - "{{ hostvars[host]['openstack']['private_v4'] }}/32"
 {% endfor %}
     zone:
     - "dns_domain": "{{ full_dns_domain }}"

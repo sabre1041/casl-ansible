@@ -9,16 +9,19 @@ openstack_default_flavor="m1.medium"
 openstack_external_network_name="external"
 openstack_dns_domain="casl.rht-labs.com"
 dns_domain="casl.rht-labs.com"
+env_id="test-stack"
 openstack_nameservers=10.9.48.31
 openstack_subnet_prefix=192.168.99
 public_dns_forwarder=10.9.48.31
+openshift_ansible_path="/root/repository/openshift-ansible"
+openshift_ansible_path=/root/repository/openshift-ansible
 
 # Subscription Management Details
 rhsm_register=True
 rhsm_satellite='sat6-1.etl.lab.eng.rdu2.redhat.com'
 rhsm_org='Emerging_Tech_Lab'
 rhsm_activationkey='rhel-7-ose'
-rhsm_repos='["rhel-7-server-rpms", "rhel-7-server-ose-3.2-rpms", "rhel-7-server-extras-rpms"]'
+rhsm_repos='["rhel-7-server-rpms", "rhel-7-server-ose-3.3-rpms", "rhel-7-server-extras-rpms"]'
 rhsm_password=''
 
 
@@ -46,13 +49,13 @@ openshift_master_identity_providers=[{'name':'paas_ldap_provider','login':'true'
 
 
 
-openshift_hosted_metrics_deploy=true
-openshift_hosted_metrics_storage_kind=nfs
-openshift_hosted_metrics_storage_access_modes=['ReadWriteOnce']
-openshift_hosted_metrics_storage_nfs_directory=/exports
-openshift_hosted_metrics_storage_nfs_options=*(rw,root_squash)
-openshift_hosted_metrics_storage_volume_name=metrics
-openshift_hosted_metrics_storage_volume_size=20Gi
+#openshift_hosted_metrics_deploy=true
+#openshift_hosted_metrics_storage_kind=nfs
+#openshift_hosted_metrics_storage_access_modes=['ReadWriteOnce']
+#openshift_hosted_metrics_storage_nfs_directory=/exports
+#openshift_hosted_metrics_storage_nfs_options=*(rw,root_squash)
+#openshift_hosted_metrics_storage_volume_name=metrics
+#openshift_hosted_metrics_storage_volume_size=20Gi
 
 # override the default controller lease ttl
 #osm_controller_lease_ttl=30

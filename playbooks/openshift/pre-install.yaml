@@ -7,7 +7,7 @@
   - role: hostnames
 
 # Subscribe Hosts
-- hosts: OSEv3
+- hosts: OSEv3:dns
   roles:
     - { role: subscription-manager, when: hostvars.localhost.rhsm_register, tags: 'subscription-manager', ansible_sudo: true }
 
@@ -37,7 +37,7 @@
 - hosts: localhost
   tasks:
   - name: "Edit /etc/resolv.conf in container"
-    shell: "sed '0,/.*nameserver.*/s/.*nameserver.*/nameserver {%for host in groups['dns']%}{{ hostvars[host].dns_public_ip }}{% endfor %}\\n&/' /etc/resolv.conf > /tmp/resolv.conf && /bin/cp -f /tmp/resolv.conf /etc/resolv.conf"
+    shell: "sed '0,/.*nameserver.*/s/.*nameserver.*/nameserver {%for host in groups['dns']%}{{ hostvars[host].openstack.public_v4 }}{% endfor %}\\n&/' /etc/resolv.conf > /tmp/resolv.conf && /bin/cp -f /tmp/resolv.conf /etc/resolv.conf"
 
 # OpenShift Pre-Requisites
 - hosts: OSEv3
@@ -46,15 +46,15 @@
     lineinfile:
       state: present
       dest: /etc/resolv.conf
-      regexp: "nameserver {%for host in groups['dns']%} {{ hostvars[host].dns_private_ip }} {% endfor %}"
-      line: "nameserver {%for host in groups['dns']%} {{ hostvars[host].dns_private_ip }} {% endfor %}"
+      regexp: "nameserver {%for host in groups['dns']%} {{ hostvars[host].openstack.private_v4 }} {% endfor %}"
+      line: "nameserver {%for host in groups['dns']%} {{ hostvars[host].openstack.private_v4 }} {% endfor %}"
       insertafter: search*
   - name: "Include DHCP/DNS workaround for OSE 3.2"
     lineinfile:
       state: present
       dest: /etc/sysconfig/network
-      regexp: "IP4_NAMESERVERS={%for host in groups['dns']%}{{ hostvars[host].dns_private_ip }}{% endfor %}"
-      line: "IP4_NAMESERVERS={%for host in groups['dns']%}{{ hostvars[host].dns_private_ip }}{% endfor %}"
+      regexp: "IP4_NAMESERVERS={%for host in groups['dns']%}{{ hostvars[host].openstack.private_v4 }}{% endfor %}"
+      line: "IP4_NAMESERVERS={%for host in groups['dns']%}{{ hostvars[host].openstack.private_v4 }}{% endfor %}"
   roles:
     - { role: docker, tags: 'docker' }
-
+    - { role: openshift-prep, tags: 'openshift-prep' }
