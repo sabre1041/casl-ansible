@@ -47,7 +47,7 @@ openshift_master_default_subdomain=apps.test-stack.casl.rht-labs.com
 #openshift_master_identity_providers=[{'bindDN': 'uid=ldap,cn=users,cn=compat,dc=rhc-ose,dc=labs,dc=redhat,dc=com', 'kind': 'LDAPPasswordIdentityProvider', 'name': 'paas_ldap_provider', 'bindPassword': 'ldap123', 'url': 'ldap://ipa.rhc-ose.labs.redhat.com:636/dc=rhc-ose,dc=labs,dc=redhat,dc=com?uid?sub?(memberOf=cn=ose_users,cn=groups,cn=accounts,dc=rhc-ose,dc=labs,dc=redhat,dc=com)', 'challenge': 'true', 'attributes': {'email': ['mail'], 'preferredUsername': ['uid'], 'id': ['dn'], 'name': ['displayName']}, 'login': 'true', 'insecure': 'true'}]
 openshift_master_identity_providers=[{'name':'paas_ldap_provider','login':'true','challenge':'true','kind':'LDAPPasswordIdentityProvider','attributes':{'id':['dn'],'email':['mail'],'name':['displayName'],'preferredUsername':['uid']},'insecure':'true','bindDN':'uid=ldap,cn=users,cn=accounts,dc=etl,dc=lab,dc=eng,dc=rdu2,dc=redhat,dc=com','bindPassword':'ldap123','url':'ldap://idm-1.etl.lab.eng.rdu2.redhat.com:389/dc=etl,dc=lab,dc=eng,dc=rdu2,dc=redhat,dc=com?uid?sub?(memberOf=cn=ose_users,cn=groups,cn=accounts,dc=etl,dc=lab,dc=eng,dc=rdu2,dc=redhat,dc=com)'}]
 
-
+#openshift_cloudprovider_kind=openstack
 
 #openshift_hosted_metrics_deploy=true
 #openshift_hosted_metrics_storage_kind=nfs
@@ -78,6 +78,7 @@ meta-host-type_master
 meta-host-type_master
 
 [nodes:children]
+masters
 meta-sub-host-type_infra
 meta-sub-host-type_app
 
