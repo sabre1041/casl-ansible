@@ -8,3 +8,6 @@
   roles:
   - { role: create_users }
 
+- hosts: masters[0]
+  roles:
+  -  role: acme

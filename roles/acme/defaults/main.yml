@@ -1,0 +1,13 @@
+---
+
+acme_project: acme
+acme_repo: https://github.com/tnozicka/openshift-acme.git
+acme_repo_branch: master
+acme_service_account: acme
+acme_local_dir: /tmp/git/acme
+acme_resources_dir: deploy
+cluster_role_file: clusterrole.yaml
+deployment_file: deployment-letsencrypt-live.yaml
+service_file: service.yaml
+acme_deployment_name: acme-controller
+acme_cluster_role_name: acme-controller

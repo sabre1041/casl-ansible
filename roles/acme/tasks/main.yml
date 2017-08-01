@@ -1,0 +1,53 @@
+---
+
+- name: Clone Git Repository
+  git:
+    repo: "{{ acme_repo }}"
+    dest: "{{ acme_local_dir }}"
+    force: yes
+
+- name: Check if project exists
+  shell: "oc get project {{ acme_project }}"
+  ignore_errors: True
+  register: acme_project_check
+
+- name: Create acme Project
+  shell: "oc adm new-project {{ acme_project }}"
+  when: acme_project_check | failed
+
+- name: Check if Service Account Exists
+  shell: "oc get serviceaccount {{ acme_service_account }} -n {{ acme_project }}"
+  ignore_errors: True
+  register: acme_service_account_check
+
+- name: Create acme Service Account
+  shell: "oc create serviceaccount {{ acme_service_account }} -n {{ acme_project }}"
+  when: acme_service_account_check | failed
+
+- name: Fix missing API version
+  lineinfile:
+    dest: "{{ acme_local_dir }}/{{ acme_resources_dir }}/{{ cluster_role_file }}"
+    regexp: "^apiVersion"
+    line: "apiVersion: v1"
+    insertbefore: BOF
+
+- name: Apply Cluster Role
+  shell: "oc apply -f {{ acme_local_dir }}/{{ acme_resources_dir }}/{{ cluster_role_file }} -n {{ acme_project }}"
+
+- name: Grant ACME Service Account Custom Role
+  shell: "oc adm policy add-cluster-role-to-user {{ acme_cluster_role_name }} system:serviceaccount:{{ acme_project }}:{{ acme_service_account }}"
+
+- name: Apply Acme Deployment
+  shell: "oc apply -f {{ acme_local_dir }}/{{ acme_resources_dir }}/{{ deployment_file }} -n {{ acme_project }}"
+
+- name: Patch DeploymentConfig
+  command: >
+      oc patch deployment/{{ acme_deployment_name }} --patch '{"spec":{"template":{"spec":{"serviceAccountName": "{{ acme_service_account }}"}}}}'
+
+- name: Apply Acme Service
+  shell: "oc apply -f {{ acme_local_dir }}/{{ acme_resources_dir }}/{{ service_file }} -n {{ acme_project }}"  
+
+- name: Remove Git Directory
+  file:
+    path: "{{ acme_local_dir }}"
+    state: absent
