@@ -42,7 +42,7 @@
 
 - name: Patch DeploymentConfig
   command: >
-      oc patch deployment/{{ acme_deployment_name }} --patch '{"spec":{"template":{"spec":{"serviceAccountName": "{{ acme_service_account }}"}}}}'
+      oc patch deployment/{{ acme_deployment_name }} --patch '{"spec":{"template":{"spec":{"serviceAccountName": "{{ acme_service_account }}"}}}}' -n {{ acme_project }}
 
 - name: Apply Acme Service
   shell: "oc apply -f {{ acme_local_dir }}/{{ acme_resources_dir }}/{{ service_file }} -n {{ acme_project }}"  
