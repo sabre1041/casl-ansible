@@ -1,0 +1,11 @@
+---
+
+cfme_host:
+cfme_username: 
+cfme_password:
+ocp_master_host: kubernetes.default
+ocp_master_port: 443
+ocp_token:
+hawkular_host: hawkular-metrics.openshift-infra
+hawkular_port: 443
+ocp_container_provier_name: OCP
