@@ -18,7 +18,6 @@ The following role variables must be provided
 cfme_host: <hostname of the CloudForms instance>
 cfme_username: <Username to access CloudForms>
 cfme_password: <Password to access CloudForms>
-ocp_token: OAuth token to access OpenShift Rest API and Hawkular
 ```
 
 The following variables can also be provided in order to customize the configuration
@@ -28,7 +27,11 @@ ocp_master_host: <OpenShift API Host>
 ocp_master_port: <OpenShift API Port>
 hawkular_host: <Hawkular Hostname>
 hawkular_port: <Hawkular Port>
+ocp_token: <OAuth token to access OpenShift Rest API>
+hawkular_token: <OAuth token to access Hawkular Metrics>
 ocp_container_provier_name: <Name of the Container Provider in CloudForms to create for OpenShift>
+default_token_sa_namespace: <Namespace of the Service Account containing the OAuth token if one is not provided for OpenShift or Hawkular>
+default_token_sa_name: <Name of the Service Account containing the OAuth token if one is not provided for OpenShift or Hawkular>
 ```
 
 Dependencies
@@ -47,7 +50,6 @@ The following is a sample playbook
   roles:
     - role: cfme-ocp-provider
       cfme_host: cloudforms.example.com
-      ocp_token: <token>
 ```
 
 License
