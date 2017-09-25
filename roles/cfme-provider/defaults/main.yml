@@ -1,0 +1,27 @@
+---
+
+cfme_host:
+cfme_username:
+cfme_password:
+max_retries: 10 
+retry_interval: 10
+
+# Enter a Comma Separated list of Providers to Execute (Example: ocp,aws)
+providers: ""
+
+# OCP Provider
+provider_ocp_master_host: kubernetes.default.svc.cluster.local
+provider_ocp_master_port: 443
+provider_ocp_token:
+provider_ocp_hawkular_token:
+provider_ocp_hawkular_host: hawkular-metrics.openshift-infra.svc.cluster.local
+provider_ocp_hawkular_port: 443
+provider_ocp_container_provider_name: OCP
+provider_ocp_default_token_sa_namespace: management-infra
+provider_ocp_default_token_sa_name: management-admin
+
+# AWS Provider
+provider_aws_provider_name: AWS
+provider_aws_region: us-east-1
+provider_aws_username: "{{ lookup('env','AWS_ACCESS_KEY_ID') }}"
+provider_aws_password: "{{ lookup('env','AWS_SECRET_ACCESS_KEY') }}"

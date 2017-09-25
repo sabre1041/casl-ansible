@@ -1,0 +1,11 @@
+---
+
+- name: Execute Provider
+  include: "{{ execute_provider }}.yml"
+  vars:    
+    provider_type: "{{ execute_provider }}"
+
+- name: Reset Provider Facts
+  set_fact:
+    provider_found: False
+    provider_id: ""

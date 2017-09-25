@@ -1,33 +1,33 @@
 {
-  {% if ocp_provider_found is defined %}
+  {% if provider_found is defined and provider_found %}
   "action": "edit",
   {% else %}
   "type": "ManageIQ::Providers::Openshift::ContainerManager",
   {% endif %}
-  "name": "{{ ocp_container_provier_name }}",
+  "name": "{{ provider_ocp_container_provider_name }}",
   "connection_configurations": [
   {
      "endpoint": {
         "role": "default",
-        "hostname": "{{ ocp_master_host }}",
+        "hostname": "{{ provider_ocp_master_host }}",
         "security_protocol": "ssl-without-validation",
-        "port": {{ ocp_master_port }}
+        "port": {{ provider_ocp_master_port }}
      },
      "authentication": {
         "role": "bearer",
-        "auth_key": "{{ ocp_token }}"
+        "auth_key": "{{ provider_ocp_token }}"
      }
   },
   {
     "endpoint": {
       "role": "hawkular",
-      "hostname": "{{ hawkular_host }}",
+      "hostname": "{{ provider_ocp_hawkular_host }}",
       "security_protocol": "ssl-without-validation",
       "port": 443
     },
     "authentication": {
       "role": "hawkular",
-      "auth_key": "{{ hawkular_token }}"
+      "auth_key": "{{ provider_ocp_hawkular_token }}"
      }
    }]
 }

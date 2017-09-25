@@ -1,0 +1,98 @@
+---
+
+- name: Retrieve Default Service Account Token
+  command: >
+    oc serviceaccounts get-token -n {{ provider_ocp_default_token_sa_namespace }} {{ provider_ocp_default_token_sa_name }}
+  ignore_errors: True
+  register: default_management_token
+  
+- name: Set Default OpenShift Token if Not Provided
+  set_fact:
+    provider_ocp_token: "{{ default_management_token.stdout }}"
+  when: default_management_token.rc == 0 and ((provider_ocp_token | trim == "") or (provider_ocp_token is none) or (provider_ocp_token is undefined))
+    
+- name: Set Default Hawkular Token if Not Provided
+  set_fact:
+    provider_ocp_hawkular_token: "{{ default_management_token.stdout }}"
+  when: default_management_token.rc == 0 and ((provider_ocp_hawkular_token | trim == "") or (provider_ocp_hawkular_token is none) or (provider_ocp_hawkular_token is undefined))
+
+- name: Validate OpenShift and Hawkular Tokens
+  fail:
+    msg: "OpenShift or Hawkular credentials were not found"
+  when: (provider_ocp_token | trim == "") or (provider_ocp_token is none) or (provider_ocp_token is undefined) or (provider_ocp_hawkular_token | trim == "") or (provider_ocp_hawkular_token is none) or (provider_ocp_hawkular_token is undefined)
+
+- name: Query Existing Providers
+  uri:
+    url: https://{{ cfme_host }}/api/providers
+    method: GET
+    user: "{{ cfme_username }}"
+    password: "{{ cfme_password }}"
+    force_basic_auth: true
+    validate_certs: false
+  until: ocp_providers_result.status == 200
+  register: ocp_providers_result
+  retries: "{{ max_retries }}"
+  delay: "{{ retry_interval }}"
+
+- name: Query Details From Each Provider
+  include: "{{ role_path }}/tasks/query_provider.yml"
+  vars:    
+    provider_url: "{{ line_item }}"
+    provider_name: "{{ provider_ocp_container_provider_name }}"
+    individual_provider: "{{ provider_type }}"
+  with_items : "{{ ocp_providers_result.json.resources | default([]) }}"
+  when: ocp_providers_result is defined
+  loop_control:
+    loop_var: line_item
+
+- name: Create Container Provider
+  uri:
+    url: https://{{ cfme_host }}/api/providers
+    method: POST
+    body: "{{ lookup('template', '{{role_path}}/templates/container_provider_rest.j2') }}"
+    user: "{{ cfme_username }}"
+    password: "{{ cfme_password }}"
+    force_basic_auth: true
+    validate_certs: false
+    body_format: json
+  until: container_provider_result.status == 200
+  register: container_provider_result
+  retries: "{{ max_retries }}"
+  delay: "{{ retry_interval }}"
+  when: provider_found is not defined or provider_found != True
+
+- name: Update Container Provider
+  uri:
+    url: https://{{ cfme_host }}/api/providers/{{ provider_id }}
+    method: POST
+    body: "{{ lookup('template', '{{role_path}}/templates/container_provider_rest.j2') }}"
+    user: "{{ cfme_username }}"
+    password: "{{ cfme_password }}"
+    force_basic_auth: true
+    validate_certs: false
+    body_format: json
+  until: update_provider_result.status == 200
+  register: update_provider_result
+  retries: "{{ max_retries }}"
+  delay: "{{ retry_interval }}"
+  when: provider_found is defined and provider_found == True
+
+- name: Set Provider ID for New Provider
+  set_fact:
+    provider_id: "{{ container_provider_result.json.results[0].id }}"
+  when: provider_id is not defined
+
+- name: Refresh Container Provider
+  uri:
+    url: https://{{ cfme_host }}/api/providers/{{ provider_id }}
+    method: POST
+    body: "{\"action\" : \"refresh\"}"
+    user: "{{ cfme_username }}"
+    password: "{{ cfme_password }}"
+    force_basic_auth: true
+    validate_certs: false
+    body_format: json
+  until: refresh_provider_result.status == 200
+  register: refresh_provider_result
+  retries: "{{ max_retries }}"
+  delay: "{{ retry_interval }}"

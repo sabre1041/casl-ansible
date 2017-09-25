@@ -1,0 +1,20 @@
+---
+
+- name: Query {{ individual_provider }} Provider
+  uri:
+    url: "{{ provider_url.href }}"
+    method: GET
+    user: "{{ cfme_username }}"
+    password: "{{ cfme_password }}"
+    force_basic_auth: true
+    validate_certs: false
+  until: provider_result.status == 200
+  register: provider_result
+  retries: "{{ max_retries }}"
+  delay: "{{ retry_interval }}"
+
+- name: Set {{ individual_provider }} Provider Facts When Match Found
+  set_fact:
+    provider_found: True
+    provider_id: "{{ provider_result.json.id }}"
+  when: "provider_result.json.name == provider_name"

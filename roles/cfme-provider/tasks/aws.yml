@@ -1,0 +1,82 @@
+---
+
+- name: Fail if Required AWS Parameters Not Provided
+  fail:
+    msg: "Required Parameters have Not Been Provided"
+  when: (provider_aws_username | trim == "") or (provider_aws_username is none) or (provider_aws_username is undefined) or (provider_aws_password | trim == "") or (provider_aws_password is none) or (provider_aws_password is undefined)
+
+- name: Query Existing Providers
+  uri:
+    url: https://{{ cfme_host }}/api/providers
+    method: GET
+    user: "{{ cfme_username }}"
+    password: "{{ cfme_password }}"
+    force_basic_auth: true
+    validate_certs: false
+  until: aws_providers_result.status == 200
+  retries: "{{ max_retries }}"
+  delay: "{{ retry_interval }}"
+  register: aws_providers_result
+
+- name: Query Details From Each Provider
+  include: "{{ role_path }}/tasks/query_provider.yml"
+  vars:    
+    provider_url: "{{ line_item }}"
+    provider_name: "{{ provider_aws_provider_name }}"
+    individual_provider: "{{ provider_type }}"
+  with_items : "{{ aws_providers_result.json.resources | default([]) }}"
+  when: aws_providers_result is defined
+  loop_control:
+    loop_var: line_item
+
+- name: Create AWS Provider
+  uri:
+    url: https://{{ cfme_host }}/api/providers
+    method: POST
+    body: "{{ lookup('template', '{{role_path}}/templates/aws_provider_rest.j2') }}"
+    user: "{{ cfme_username }}"
+    password: "{{ cfme_password }}"
+    force_basic_auth: true
+    validate_certs: false
+    body_format: json
+  until: aws_provider_result.status == 200
+  register: aws_provider_result
+  retries: "{{ max_retries }}"
+  delay: "{{ retry_interval }}"
+  when: provider_found is not defined or provider_found != True
+
+- name: Update AWS Provider
+  uri:
+    url: https://{{ cfme_host }}/api/providers/{{ provider_id }}
+    method: POST
+    body: "{{ lookup('template', '{{role_path}}/templates/aws_provider_rest.j2') }}"
+    user: "{{ cfme_username }}"
+    password: "{{ cfme_password }}"
+    force_basic_auth: true
+    validate_certs: false
+    body_format: json
+  until: update_providers_result.status == 200
+  register: update_providers_result
+  retries: "{{ max_retries }}"
+  delay: "{{ retry_interval }}"
+  when: provider_found is defined and provider_found == True
+
+- name: Set Provider ID for New Provider
+  set_fact:
+    provider_id: "{{ aws_provider_result.json.results[0].id }}"
+  when: provider_id is not defined
+
+- name: Refresh AWS Provider
+  uri:
+    url: https://{{ cfme_host }}/api/providers/{{ provider_id }}
+    method: POST
+    body: "{\"action\" : \"refresh\"}"
+    user: "{{ cfme_username }}"
+    password: "{{ cfme_password }}"
+    force_basic_auth: true
+    validate_certs: false
+    body_format: json
+  until: refresh_providers_result.status == 200
+  register: refresh_providers_result
+  retries: "{{ max_retries }}"
+  delay: "{{ retry_interval }}"

@@ -1,0 +1,23 @@
+---
+
+- name: Fail if Required Parameters Not Provided
+  fail:
+    msg: "Required Parameters have Not Been Provided"
+  when: (cfme_host | trim == "") or (cfme_host is none) or (cfme_host is undefined) or (cfme_username | trim == "") or (cfme_username is none) or (cfme_username is undefined) or (cfme_password | trim == "") or (cfme_password is none) or (cfme_password is undefined)
+
+- name: Convert Providers into List
+  set_fact:
+    cfme_providers: "{{ providers.strip().split(',') }}"
+
+- name: Validate Providers
+  register: provider_stat
+  stat:
+    path: "{{ role_path }}/tasks/{{ item }}.yml"
+  failed_when: provider_stat.stat.exists == false
+  with_items: "{{ cfme_providers}}"
+
+- name: Execute Provider
+  include: "execute_provider.yml"
+  vars:    
+    execute_provider: "{{ item }}"
+  with_items: "{{ cfme_providers}}"

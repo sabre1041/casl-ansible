@@ -1,0 +1,13 @@
+{
+  {% if provider_found is defined and provider_found %}
+  "action": "edit",
+  {% else %}
+  "type": "ManageIQ::Providers::Amazon::CloudManager",
+  {% endif %}
+  "name": "{{ provider_aws_provider_name }}",
+  "provider_region": "{{ provider_aws_region }}",
+  "credentials": {
+    "userid": "{{ provider_aws_username }}",
+    "password": "{{ provider_aws_password }}"
+  }
+}
